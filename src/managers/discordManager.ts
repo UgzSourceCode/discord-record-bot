@@ -18,10 +18,7 @@ export interface DiscordManager {
 }
 
 export const getDiscordManager = (client: Client, listenerManager: ListenerManager): DiscordManager => {
-  // const intents: BitFieldResolvable<IntentsString, number> = listenerManager.getAllIntents();
-
   let status: DiscordClientStatus = DiscordClientStatus.created;
-  // const client = new Client({ intents });
   listenerManager.runAll(client);
 
   client.on("ready", () => {
@@ -29,10 +26,10 @@ export const getDiscordManager = (client: Client, listenerManager: ListenerManag
     createLog.info("Discord client is ready.");
   });
 
-  client.on("error", () => {
+  client.on("error", (err) => {
     status = DiscordClientStatus.error;
     createLog.info("Discord client has error.");
-    // TODO: Print error content
+    createLog.error(err);
   });
 
   client.on("disconnect", () => {
