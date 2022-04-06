@@ -8,6 +8,7 @@ import { loadFile, loadFileAsType } from '../helpers/loadFile';
 import { ContentParam } from '../helpers/replaceParams';
 import { preparePayReminderParams } from '../helpers/payReminderHelpers';
 import { Executor } from './triggerManager';
+import { MailerLiteClient } from '../types/mailerLiteApi/mailerLiteClient';
 
 export interface MailingManager {
   sendPayReminderMail: (groupName: string) => void;
@@ -29,68 +30,11 @@ interface SetCampaignContentResponse {
   success: boolean;
 }
 
-export interface MailerLiteClient {
-  // ...account
-  getAccountRaw: () => Promise<AccountWrap>;
-  getAccount: () => Promise<Account>;
-  getMe: () => Promise<Account>;
-  // ...batch
-  batch: (request: Batch[]) => Promise<any[]>;
-  // ...campaigns
-  actOnCampaign: (
-    campaignId: number,
-    action: CampaignAction,
-    data: CampaignSendData,
-  ) => Promise<unknown>;
-  getCampaigns: (
-    status: CampaignStatus,
-    params: CampaignQuery
-  ) => Promise<unknown>;
-  getCampaignCount: (
-    status: CampaignStatus
-  ) => Promise<number>;
-  createCampaign: (
-    campaign: CampaignData
-  ) => Promise<unknown>;
-  removeCampaign: (
-    campaignId: number
-  ) => Promise<unknown>;
-  setCampaignContent: (
-    campaignId: number,
-    content: CampaignContent
-  ) => Promise<unknown>;
-  // ...fields
-  getFields: () => Promise<unknown>;
-  createField: (
-    field: FieldData
-  ) => Promise<unknown>;
-  updateField: (
-    fieldId: number,
-    fieldUpdate: FieldUpdate
-  ) => Promise<unknown>;
-  removeField: (
-    fieldId: number
-  ) => Promise<unknown>;
-  // ...groups
-  getGroups: (
-    params: GroupQuery
-  ) => Promise<MailerLiteGroup[]>;
-  searchGroups: (
-    groupName: GroupSearchQuery['group_name']
-  ) => Promise<MailerLiteGroup[]>;
-  getGroup: (
-    groupId: number
-  ) => Promise<MailerLiteGroup>;
-  createGroup: (
-    group: GroupData
-  ) => Promise<MailerLiteGroup>;
-}
-
 export interface MailerLiteExecutor {
 
 }
 
-export const getMailingManager = (mailerLiteClient: MailerLiteClient, mailerLiteApiKey: string): MailingManager => {
+export const getMailingManager = (mailerLiteClient: MailerLiteClient): MailingManager => {
   if (!process.env.MAILERLITE_API_KEY) {
     throw `Not found "MAILERLITE_API_KEY" in your enviroments.`;
   }
