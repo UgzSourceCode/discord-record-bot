@@ -1,7 +1,5 @@
-export interface ContentParam {
-    name: string;
-    content: string;
-}
+import { ContentParam } from "../types/contentParam";
+
 
 export const replaceParams = (content: string, params: ContentParam[]): string => {
     let result = content;

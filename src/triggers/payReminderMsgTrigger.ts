@@ -1,5 +1,5 @@
-import { replaceParams } from './../helpers/replaceParams';
-import { loadFile } from './../helpers/loadFile';
+import { replaceParams } from '../utils/replaceParams';
+import { loadFile } from '../utils/loadFile';
 import { Executor } from './../managers/triggerManager';
 import { Trigger } from "../managers/triggerManager";
 import { Client } from 'discord.js';
@@ -7,7 +7,7 @@ import { findTextChennelByName } from '../helpers/findChannel';
 import schedule from "node-schedule";
 import { AssetPathMap } from '../consts/assetPathMap';
 import { preparePayReminderParams } from '../helpers/payReminderHelpers';
-import { createLog } from '../helpers/logger';
+import { createLog } from '../utils/logger';
 
 export const getPayReminderMsgTrigger = (): Trigger => {
     const name = "PayReminderMsg";

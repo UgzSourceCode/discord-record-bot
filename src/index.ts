@@ -1,4 +1,5 @@
-import { createLog } from './helpers/logger';
+import { prepareMailerLiteClient } from './utils/prepareMailerLiteClient';
+import { createLog } from './utils/logger';
 import { getWaveHelloListener } from './listeners/waveHelloListener';
 import { getWelcomeListener } from './listeners/welcomeListener';
 import { getDiscordManager } from './managers/discordManager';
@@ -6,7 +7,6 @@ import { getListenerManager } from './managers/listenersManager';
 import { getTriggerManager } from './managers/triggerManager';
 import { getPayReminderMsgTrigger } from './triggers/payReminderMsgTrigger';
 import { getMailingManager } from './managers/mailingManager';
-import { getMailingExecutor } from './executors/mailingExecutor';
 import { getPayReminderMailTrigger } from './triggers/payReminderMailTrigger';
 import { prepareDiscordClient } from './utils/prepareDiscordClient';
 
@@ -24,11 +24,13 @@ try {
   );
   discordManager.login();
 
-  // const mailingManager = getMailingManager();
+  const mailingManager = getMailingManager(
+    prepareMailerLiteClient(process.env.MAILERLITE_API_KEY)
+  );
 
   const triggerManagger = getTriggerManager();
   triggerManagger.registerExecutor(discordManager.getDiscordExecutor());
-  triggerManagger.registerExecutor(getMailingExecutor());
+  triggerManagger.registerExecutor(mailingManager.getMailingExecutor());
   triggerManagger.registerTrigger(getPayReminderMsgTrigger());
   triggerManagger.registerTrigger(getPayReminderMailTrigger());
   triggerManagger.runAll();

@@ -1,5 +1,5 @@
 import { MonthEnum } from "../consts/monthEnum";
-import { ContentParam } from "./replaceParams";
+import { ContentParam } from "../types/contentParam";
 
 export const preparePayReminderParams = (): ContentParam[] => {
     const nextPaymentTime = new Date();

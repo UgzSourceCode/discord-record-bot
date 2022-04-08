@@ -1,15 +1,8 @@
-import { createLog } from './../helpers/logger';
+import { createLog } from '../utils/logger';
 import { ListenerManager } from './listenersManager';
 import { Client } from "discord.js";
 import { Executor } from './triggerManager';
-
-export enum DiscordClientStatus {
-  created = 0,
-  ready,
-  disconected,
-  reconnecting,
-  error,
-}
+import { DiscordClientStatus } from '../types/discordClientStatusEnum';
 
 export interface DiscordManager {
   status: DiscordClientStatus,

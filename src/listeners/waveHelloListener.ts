@@ -1,5 +1,5 @@
 import { Client, IntentsString, Message, MessageEmbed } from 'discord.js';
-import { getRandomFromMap } from '../helpers/getRandomFromMap';
+import { getRandomFromMap } from '../utils/getRandomFromMap';
 import { Listener } from './../managers/listenersManager';
 
 export const helloGifsMap: Map<string, string> = new Map<string, string>([

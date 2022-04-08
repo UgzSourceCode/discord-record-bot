@@ -1,55 +1,26 @@
-import { replaceParams } from './../helpers/replaceParams';
-import { Account, AccountWrap, Batch, CampaignAction, CampaignContent, CampaignData, CampaignQuery, CampaignSendData, CampaignStatus, FieldData, FieldUpdate, GroupData, GroupQuery, GroupSearchQuery } from './../../node_modules/mailerlite-api-v2-node/dist/@types/index.d';
-import { createLog } from './../helpers/logger';
-import MailerLite from "mailerlite-api-v2-node";
+
+import { CampaignContent, CampaignData } from './../../node_modules/mailerlite-api-v2-node/dist/@types/index.d';
+import { createLog } from '../utils/logger';
 import { MailerLiteGroup } from "mailerlite-api-v2-node/dist/api/groups";
 import { AssetPathMap } from '../consts/assetPathMap';
-import { loadFile, loadFileAsType } from '../helpers/loadFile';
-import { ContentParam } from '../helpers/replaceParams';
+import { loadFileAsType } from '../utils/loadFile';
 import { preparePayReminderParams } from '../helpers/payReminderHelpers';
 import { Executor } from './triggerManager';
 import { MailerLiteClient } from '../types/mailerLiteApi/mailerLiteClient';
+import { prepareMailerContent } from '../utils/prepareMailerContent';
+import { createCampaign, prepareGroupsIds, setCampaignContent } from '../helpers/mailerLiteApi';
+import { CreateCampaignResponse } from '../types/mailerLiteApi/createCampaignResponse';
 
 export interface MailingManager {
-  sendPayReminderMail: (groupName: string) => void;
-  findGroup: (groupName: string) => Promise<MailerLiteGroup>;
   getMailingExecutor: () => Executor;
 }
 
-interface CreateCampaignResponse {
-  campaignType?: string;
-  date?: string;
-  accountId?: number;
-  campaignName?: string;
-  id?: number;
-  mailId?: number;
-  options?: unknown;
-}
-
-interface SetCampaignContentResponse {
-  success: boolean;
-}
-
 export interface MailerLiteExecutor {
-
+  sendPayReminderMail: (groupName: string) => void;
+  findGroup: (groupName: string) => Promise<MailerLiteGroup>;
 }
 
 export const getMailingManager = (mailerLiteClient: MailerLiteClient): MailingManager => {
-  if (!process.env.MAILERLITE_API_KEY) {
-    throw `Not found "MAILERLITE_API_KEY" in your enviroments.`;
-  }
-  // const mailerLite = MailerLite(process.env.MAILERLITE_API_KEY);
-
-  // TODO: move to wrapper
-  const createCampaign = (data: CampaignData): Promise<CreateCampaignResponse> => {
-    return new Promise<CreateCampaignResponse>((resolve, reject) => {
-      mailerLiteClient.createCampaign(data)
-        .then(response => resolve(response as unknown as CreateCampaignResponse))
-        .catch(err => reject(err));
-    });
-  };
-
-  // TODO: move to Executor
   const findGroup = (groupName: string): Promise<MailerLiteGroup> => {
     return new Promise<MailerLiteGroup>((resolve, reject) => {
       mailerLiteClient.getGroups().then(response => {
@@ -63,42 +34,19 @@ export const getMailingManager = (mailerLiteClient: MailerLiteClient): MailingMa
     });
   };
 
-  // TODO: move to wrapper
-  const setCampaignContent = (campaignId: number, content: CampaignContent): Promise<SetCampaignContentResponse> => {
-    return new Promise<SetCampaignContentResponse>((resolve, reject) => {
-      mailerLiteClient.setCampaignContent(campaignId, content)
-        .then(response => resolve(response as unknown as SetCampaignContentResponse))
-        .catch(err => reject(err));
-    });
-  };
-
-  // TODO: move to wrapper
-  const prepareGroupsIds = (groups: MailerLiteGroup[]): number[] => {
-    return groups.map(group => group.id);
-  };
-
-  // TODO: move to wrapper
-  const prepareContent = async (htmlFilePath: string, plainTextPath: string, params: ContentParam[]): Promise<CampaignContent> => {
-    return {
-      html: replaceParams(await loadFile(htmlFilePath), params),
-      plain: replaceParams(await loadFile(plainTextPath), params)
-    };
-  };
-
-  // TODO: move to executor
   const sendPayReminderMail = async (groupName: string) => {
     console.log("inside send Pay Reminder");
     let campaignId: number | undefined;
     let isSetContent: boolean = false;
     try {
-      const content: CampaignContent = await prepareContent(AssetPathMap.payReminderMailHtml, AssetPathMap.payReminderMailTxt, preparePayReminderParams());
+      const content: CampaignContent = await prepareMailerContent(AssetPathMap.payReminderMailHtml, AssetPathMap.payReminderMailTxt, preparePayReminderParams());
       const campaignData: CampaignData = await loadFileAsType(AssetPathMap.payReminderMailJson);
       const group: MailerLiteGroup = await findGroup(groupName);
       campaignData.groups = prepareGroupsIds([group]);
-      const campaignResponse: CreateCampaignResponse = await createCampaign(campaignData);
+      const campaignResponse: CreateCampaignResponse = await createCampaign(mailerLiteClient, campaignData);
       campaignId = campaignResponse.id;
       if (campaignId) {
-        isSetContent = (await setCampaignContent(campaignId, content)).success;
+        isSetContent = (await setCampaignContent(mailerLiteClient, campaignId, content)).success;
       }
       if (campaignId && isSetContent) {
         const actResponse = await mailerLiteClient.actOnCampaign(campaignId, "send", {
@@ -122,16 +70,19 @@ export const getMailingManager = (mailerLiteClient: MailerLiteClient): MailingMa
   };
 
   const getMailingExecutor = (): Executor => {
+    const executor = {
+      sendPayReminderMail,
+      findGroup
+    };
+
     return {
       name: "MailingExecutor",
-      executor: this,
+      executor,
       typeName: typeof executor,
     };
   };
 
   return {
     getMailingExecutor,
-    sendPayReminderMail,
-    findGroup,
   };
 };
