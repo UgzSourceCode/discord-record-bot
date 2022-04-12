@@ -28,14 +28,13 @@ export const getMailingManager = (mailerLiteClient: MailerLiteClient): MailingMa
         if (group) {
           resolve(group);
         } else {
-          throw `Not found group "${groupName}" in MailerLite.`;
+          throw new Error(`Not found group "${groupName}" in MailerLite.`);
         }
       }).catch(err => reject(err));
     });
   };
 
   const sendPayReminderMail = async (groupName: string) => {
-    console.log("inside send Pay Reminder");
     let campaignId: number | undefined;
     let isSetContent: boolean = false;
     try {
@@ -49,11 +48,11 @@ export const getMailingManager = (mailerLiteClient: MailerLiteClient): MailingMa
         isSetContent = (await setCampaignContent(mailerLiteClient, campaignId, content)).success;
       }
       if (campaignId && isSetContent) {
-        const actResponse = await mailerLiteClient.actOnCampaign(campaignId, "send", {
+        // const actResponse = 
+        await mailerLiteClient.actOnCampaign(campaignId, "send", {
           analytics: 1,
           type: 1
         });
-        console.log(JSON.stringify(actResponse));
       }
       createLog.info(`Mail was send to group "${groupName}".`)
     } catch (err) {
