@@ -12,30 +12,32 @@ import { prepareDiscordClient } from './utils/prepareDiscordClient';
 
 require('dotenv').config();
 
-try {
-  createLog.info("Bot is starting...");
-  const listenerManager = getListenerManager();
-  listenerManager.registerListener(getWelcomeListener());
-  listenerManager.registerListener(getWaveHelloListener());
+const main = () => {
+  try {
+    createLog.info("Bot is starting...");
+    const listenerManager = getListenerManager();
+    listenerManager.registerListener(getWelcomeListener());
+    listenerManager.registerListener(getWaveHelloListener());
 
-  const discordManager = getDiscordManager(
-    prepareDiscordClient(listenerManager.getAllIntents()),
-    listenerManager
-  );
-  discordManager.login();
+    const discordManager = getDiscordManager(prepareDiscordClient(listenerManager.getAllIntents()), listenerManager);
+    discordManager.login();
 
-  const mailingManager = getMailingManager(
-    prepareMailerLiteClient(process.env.MAILERLITE_API_KEY)
-  );
+    const mailingManager = getMailingManager(
+        prepareMailerLiteClient(process.env.MAILERLITE_API_KEY)
+    );
 
-  const triggerManagger = getTriggerManager();
-  triggerManagger.registerExecutor(discordManager.getDiscordExecutor());
-  triggerManagger.registerExecutor(mailingManager.getMailingExecutor());
-  triggerManagger.registerTrigger(getPayReminderMsgTrigger());
-  triggerManagger.registerTrigger(getPayReminderMailTrigger());
-  triggerManagger.runAll();
-} catch (error) {
-  createLog.error(error);
-} finally {
-  createLog.info("Bot was stopped.");
-}
+    const triggerManagger = getTriggerManager();
+    triggerManagger.registerExecutor(discordManager.getDiscordExecutor());
+    triggerManagger.registerExecutor(mailingManager.getMailingExecutor());
+    triggerManagger.registerTrigger(getPayReminderMsgTrigger());
+    triggerManagger.registerTrigger(getPayReminderMailTrigger());
+    triggerManagger.runAll();
+  } catch (error) {
+    createLog.error(error);
+  } finally {
+    createLog.info("Bot was stopped.");
+    main();
+  }
+};
+
+main();
